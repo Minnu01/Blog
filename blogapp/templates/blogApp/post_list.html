@@ -1,0 +1,15 @@
+{% extends 'blogApp/base.html' %}
+{% block title %}All Posts{% endblock %}
+
+{% block content %}
+
+<h2 class="mb-3">All Posts</h2>
+{% for post in posts %}
+<div class="card mb-3">
+    <div class="card-body">
+        <h4><a href="{% url 'post_detail' post.pk %}">{{ post.title }}</a></h4>
+        <small class="text-muted">{{ post.created_at }}</small>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'blogApp/base.html' %}
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2>{{ post.title }}</h2>
+    <p class="text-muted">By {{ post.author.username }} on {{ post.created_at }}</p>
+    <div>{{ post.content|linebreaks }}</div>
+</div>
+
+<hr>
+
+<h4>Comments</h4>
+
+{% for comment in comments %}
+    <div class="mb-3 border-bottom pb-2">
+        <strong>{{ comment.author.username }}</strong> · 
+        <small class="text-muted">{{ comment.created_at|date:"M d, Y H:i" }}</small>
+        <p>{{ comment.body }}</p>
+
+        {% if user == comment.author %}
+            <a href="{% url 'edit_comment' comment.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+            <a href="{% url 'delete_comment' comment.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+        {% endif %}
+
+    </div>
+    
+{% empty %}
+    <p>No comments yet.</p>
+{% endfor %}
+
+{% if user.is_authenticated %}
+    <h5 class="mt-4">Leave a Comment</h5>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Post Comment</button>
+    </form>
+{% else %}
+    <p><a href="{% url 'login' %}">Log in</a> to leave a comment.</p>
+{% endif %}
+{% endblock %}
