@@ -1,8 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Post, Comment
-from .forms import PostForm, CommentForm
+from .forms import PostForm, CommentForm, ProfileForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
+from django.contrib.auth.models import User
+from django.http import Http404
 
 
 @login_required
@@ -50,7 +52,9 @@ def post_create(request):
     if request.method == 'POST':
         form = PostForm(request.POST)
         if form.is_valid():
-            form.save()
+            post = form.save(commit=False)
+            post.author =request.user
+            post.save()
             return redirect('post_list')
     else:
         form = PostForm()
@@ -103,3 +107,29 @@ def delete_comment(request, pk):
         return redirect('post_detail', pk=post_pk)
 
     return render(request, 'blogApp/delete_comment.html', {'comment': comment})
+
+def user_profile(request, username):
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        raise Http404("User does not exist")
+    
+    posts = Post.objects.filter(author=user).order_by('-created_at')
+    return render(request, 'blogApp/user_profile.html', {'profile_user': user, 'posts': posts})
+
+
+from django.contrib.auth.decorators import login_required
+from .forms import ProfileForm
+
+@login_required
+def edit_profile(request):
+    profile = request.user.profile
+    form = ProfileForm(instance=profile)
+
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('user_profile', username=request.user.username)
+
+    return render(request, 'blogApp/edit_profile.html', {'form': form})
